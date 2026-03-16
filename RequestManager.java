@@ -15,7 +15,7 @@ public class RequestManager {
         defaultAddress = address + "/";
     }
 
-    public static JSONObject sendPostRequest(String ENDPOINT, JSONObject json) {
+    public static Response sendPostRequest(String ENDPOINT, JSONObject json) {
         try {
             URL url = new URL(defaultAddress + ENDPOINT);
 
@@ -34,11 +34,11 @@ public class RequestManager {
             String responseString = StreamReader.readStream(stream);
 
             conn.disconnect();
-            return new JSONObject(responseString.trim());    
+            return new Response(new JSONObject(responseString.trim()));    
         }
         catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new Response();
         }
     }
 }
