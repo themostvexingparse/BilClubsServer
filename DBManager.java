@@ -22,10 +22,17 @@ public class DBManager {
         initialized = true;
     }
 
+    public boolean doesUniqueUserExist(Filter filter) {
+        List<User> queriedUsers = queryUsers(filter);
+        return (queriedUsers.size() == 1);
+    }
+
     public List<User> queryUsers(Filter filter) {
+        if (ServerConfig.PRINT_DEBUG) System.out.printf("Queried users for filter: %s\n", filter.toString());
         if(!initialized) return null;
         Map<String, String> keyMap = new HashMap<String, String>() {{
             put("id", "u.getId() = %s");
+            put("token", "u.getToken() = '%s'");
             put("name", "u.getFullName() = '%s'");
             put("email", "u.getEmail() = '%s'");
         }};
@@ -33,6 +40,7 @@ public class DBManager {
         queryBuilder.append("SELECT u FROM User u ");
         boolean hasFilter = false;
         Map<String, Object> filterMap = filter.getMap();
+        // Do NOT forget to sanitize input
         for (String key : filterMap.keySet()) {
             String format = keyMap.get(key);
             if (format == null) continue;
@@ -40,6 +48,8 @@ public class DBManager {
             if(!hasFilter) {
                 queryBuilder.append("WHERE ");
                 hasFilter = true;
+            } else {
+                queryBuilder.append("AND ");
             }
             queryBuilder.append(String.format(format, value));
             queryBuilder.append(" ");
@@ -53,7 +63,10 @@ public class DBManager {
     public User queryUser(Filter filter) {
         if(!initialized) return null;
         List<User> users = queryUsers(filter);
-        if (users.size() == 0) return null;
+        if (users.size() != 1) {
+            if (ServerConfig.PRINT_DEBUG) System.out.printf("Error: %s returned %s results.\n", filter, users.size());
+            return null;
+        }
         return users.get(0);
     }
 
@@ -65,6 +78,7 @@ public class DBManager {
         userManager.getTransaction().begin();
         userManager.persist(user);
         userManager.getTransaction().commit();
+        if (ServerConfig.PRINT_DEBUG) System.out.printf("Added user: %s\n", user.toString());
         return true;
     }
 
@@ -74,9 +88,10 @@ public class DBManager {
         userManager.getTransaction().begin();
         User queriedUser = userManager.find(User.class, user.getId());
         if (queriedUser == null) return false; // prevent creation of a new account with the same email
-        queriedUser = user;
+        userManager.merge(user);
         userManager.getTransaction().commit();
-        userManager.refresh(queriedUser);
+        // userManager.refresh(queriedUser);
+        if (ServerConfig.PRINT_DEBUG) System.out.printf("Updated user: %s\n", user.toString());
         return true;
     }
 }
