@@ -57,7 +57,7 @@ public class BilClubsServer {
         signupRequest.put("firstName", "...");
         signupRequest.put("lastName", "...");
 
-        JSONObject response = RequestManager.sendPostRequest("api/signup", signupRequest);
+        Response response = RequestManager.sendPostRequest("api/signup", signupRequest);
         System.out.printf("Response: %s\n",  response);
 
         JSONObject loginRequest = new JSONObject();
@@ -65,20 +65,21 @@ public class BilClubsServer {
         loginRequest.put("email", "...");
         loginRequest.put("password", "...");
 
-        JSONObject response2 = RequestManager.sendPostRequest("api/login", loginRequest);
+        Response response2 = RequestManager.sendPostRequest("api/login", loginRequest);
         System.out.printf("Response: %s\n",  response2);
 
-        String token = response2.getJSONObject("data").getString("sessionToken");
-        Integer id = response2.getJSONObject("data").getInt("userId");
+        String token = response2.getPayload().getString("sessionToken");
+        Integer id = response2.getPayload().getInt("userId");
 
         JSONObject accessRequest = new JSONObject();
 
         accessRequest.put("sessionToken", token);
         accessRequest.put("userId", id);
 
-        JSONObject response3 = RequestManager.sendPostRequest("api/users", accessRequest);
+        Response response3 = RequestManager.sendPostRequest("api/users", accessRequest);
         System.out.printf("Response: %s\n",  response3);
 
         */
+
     }
 }
