@@ -40,7 +40,7 @@ public class DBManager {
         queryBuilder.append("SELECT u FROM User u ");
         boolean hasFilter = false;
         Map<String, Object> filterMap = filter.getMap();
-        // Do NOT forget to sanitize input
+        // TODO: sanitize input
         for (String key : filterMap.keySet()) {
             String format = keyMap.get(key);
             if (format == null) continue;
@@ -64,7 +64,7 @@ public class DBManager {
         if(!initialized) return null;
         List<User> users = queryUsers(filter);
         if (users.size() != 1) {
-            if (ServerConfig.PRINT_DEBUG) System.out.printf("Error: %s returned %s results.\n", filter, users.size());
+            if (ServerConfig.PRINT_DEBUG) System.out.printf("Info: %s returned %s results.\n", filter, users.size());
             return null;
         }
         return users.get(0);
@@ -75,6 +75,15 @@ public class DBManager {
         Filter emailFilter = new Filter();
         emailFilter.addFilter("email", user.getEmail());
         if (queryUser(emailFilter) != null) return false; // prevent creation of a new account with the same email
+        userManager.getTransaction().begin();
+        userManager.persist(user);
+        userManager.getTransaction().commit();
+        if (ServerConfig.PRINT_DEBUG) System.out.printf("Added user: %s\n", user.toString());
+        return true;
+    }
+
+    public boolean addUserUnsafe(User user) {
+        if(!initialized) return false;
         userManager.getTransaction().begin();
         userManager.persist(user);
         userManager.getTransaction().commit();

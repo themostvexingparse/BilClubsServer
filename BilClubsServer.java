@@ -13,13 +13,11 @@ import org.json.*;
  
 public class BilClubsServer {
 
-    static DBManager manager = new DBManager();
-
     private final static HttpHandler api = new HttpHandler() {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
 
-            JSONObject response = APIHandler.handle(httpExchange, manager);
+            JSONObject response = APIHandler.handle(httpExchange);
 
             final byte[] out = (response.toString()).getBytes("UTF-8");
 
@@ -36,7 +34,8 @@ public class BilClubsServer {
         }
     };
     public static void main(String[] args) throws Exception {
-        manager.initialize("db");
+
+        APIHandler.initializeDB();
 
         HttpServer httpServer = HttpServer.create(new InetSocketAddress(5000), 0);
         httpServer.setExecutor(Executors.newCachedThreadPool());
@@ -44,42 +43,41 @@ public class BilClubsServer {
         httpServer.start();
         System.out.println("Server Started");
 
-        TimeUnit.SECONDS.sleep(2);
-
         // Sample code
 
-        /*
 
-        JSONObject signupRequest = new JSONObject();
+        
+        // TimeUnit.SECONDS.sleep(2);
 
-        signupRequest.put("email", "...@ug.bilkent.edu.tr");
-        signupRequest.put("password", "...");
-        signupRequest.put("firstName", "...");
-        signupRequest.put("lastName", "...");
+        // JSONObject signupRequest = new JSONObject();
 
-        Response response = RequestManager.sendPostRequest("api/signup", signupRequest);
-        System.out.printf("Response: %s\n",  response);
+        // signupRequest.put("email", "...");
+        // signupRequest.put("password", "...");
+        // signupRequest.put("firstName", "...");
+        // signupRequest.put("lastName", "...");
 
-        JSONObject loginRequest = new JSONObject();
+        // Response response = RequestManager.sendPostRequest("api/signup", signupRequest);
+        // System.out.printf("Response: %s\n",  response);
 
-        loginRequest.put("email", "...");
-        loginRequest.put("password", "...");
 
-        Response response2 = RequestManager.sendPostRequest("api/login", loginRequest);
-        System.out.printf("Response: %s\n",  response2);
+        // JSONObject loginRequest = new JSONObject();
 
-        String token = response2.getPayload().getString("sessionToken");
-        Integer id = response2.getPayload().getInt("userId");
+        // loginRequest.put("email", "...");
+        // loginRequest.put("password", "...");
 
-        JSONObject accessRequest = new JSONObject();
+        // Response response2 = RequestManager.sendPostRequest("api/login", loginRequest);
+        // System.out.printf("Response: %s\n",  response2);
 
-        accessRequest.put("sessionToken", token);
-        accessRequest.put("userId", id);
+        // String token = response2.getPayload().getString("sessionToken");
+        // Integer id = response2.getPayload().getInt("userId");
 
-        Response response3 = RequestManager.sendPostRequest("api/users", accessRequest);
-        System.out.printf("Response: %s\n",  response3);
+        // JSONObject accessRequest = new JSONObject();
 
-        */
+        // accessRequest.put("sessionToken", token);
+        // accessRequest.put("userId", id);
+
+        // Response response3 = RequestManager.sendPostRequest("api/users", accessRequest);
+        // System.out.printf("Response: %s\n",  response3);
 
     }
 }

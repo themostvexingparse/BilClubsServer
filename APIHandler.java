@@ -1,4 +1,6 @@
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -6,6 +8,19 @@ import org.json.JSONObject;
 import com.sun.net.httpserver.HttpExchange;
 
 public class APIHandler {
+
+    private static final HTMLTemplate welcomeTemplate = new HTMLTemplate("templates/welcome.html");
+
+    static final Credentials credentials = new Credentials(System.getenv());
+
+    static DBManager manager = new DBManager();
+    static MailSession session = new MailSession(credentials);
+
+    private static final ExecutorService concurrentExecutor = Executors.newCachedThreadPool();
+
+    public static void initializeDB() {
+        manager.initialize("db");
+    }
 
     private static JSONObject buildResponse(int code, JSONObject data, String errorMessage) {
         JSONObject response = new JSONObject();
@@ -25,7 +40,7 @@ public class APIHandler {
         return response;
     }
     
-    public static JSONObject handle(HttpExchange httpExchange, DBManager manager) {
+    public static JSONObject handle(HttpExchange httpExchange) {
         String remoteAddress = httpExchange.getRemoteAddress().toString() + "/";
         String path = httpExchange.getRequestURI().getRawPath();
 
@@ -77,7 +92,14 @@ public class APIHandler {
                     newUser.setFirstName(firstName);
                     newUser.setLastName(lastName);
                     
-                    if (manager.addUser(newUser)) {
+                    if (manager.addUserUnsafe(newUser)) {
+                        HTMLTemplate welcomeMessage = welcomeTemplate.formatted("name", newUser.getFullName());
+                        MailMessage message = new MailMessage();
+                        message.setSubject("Welcome to Bil'Clubs");
+                        message.fromTemplate(welcomeMessage);
+                        message.addRecipient(newUser.getEmail());
+                        MailTask task = session.getTask(message);
+                        concurrentExecutor.submit(task);
                         JSONObject data = new JSONObject();
                         data.put("email", email);
                         data.put("fullName", firstName + " " + lastName);
